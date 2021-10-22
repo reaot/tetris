@@ -1,6 +1,8 @@
 use pixels::{Pixels, SurfaceTexture};
-use rand::distributions::{Distribution, Standard};
-use rand::Rng;
+use rand::{
+  distributions::{Distribution, Standard},
+  Rng,
+};
 use std::{
   collections::{HashMap, VecDeque},
   time::{Duration, Instant},
@@ -492,7 +494,7 @@ impl Field {
   }
   fn next_figure(&mut self) {
     self.put_rect_at();
-    self.check_last_lines();
+    self.check_lines();
     self.current_figure_pos = Pos { x: 4, y: 0 };
     self.current_figure_rotation = Rotation::None;
     self.current_figure = Figure {
@@ -500,17 +502,16 @@ impl Field {
       color: rand::thread_rng().gen(),
     }
   }
-  fn check_last_lines(&mut self) {
-    if self.pieces[self.height - 1]
+  fn check_lines(&mut self) {
+    if let Some((y, line)) = self
+      .pieces
       .iter()
-      .all(|x| x != &Color::Transparent)
+      .enumerate()
+      .find(|(_, line)| line.iter().all(|x| x != &Color::Transparent))
     {
-      for i in (1..self.height).rev() {
-        for j in 0..self.width {
-          self.pieces[i][j] = self.pieces[i - 1][j];
-        }
-      }
-      self.check_last_lines();
+      self.pieces.remove(y);
+      self.pieces.insert(0, vec![Color::Transparent; self.width]);
+      self.check_lines()
     }
   }
 }
