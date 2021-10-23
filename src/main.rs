@@ -17,8 +17,9 @@ use winit::{
   window::WindowBuilder,
 };
 
-const WIDTH: usize = 300;
+const WIDTH: usize = 200;
 const HEIGHT: usize = WIDTH * 2;
+const PERIOD_MS: u32 = 200;
 
 #[derive(Copy, Clone)]
 struct Pos {
@@ -105,228 +106,253 @@ impl Distribution<FigureKind> for Standard {
   }
 }
 
-impl From<FigureKind> for HashMap<Rotation, [[u8; 4]; 4]> {
-  fn from(fig: FigureKind) -> HashMap<Rotation, [[u8; 4]; 4]> {
+impl From<FigureKind> for (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
+  fn from(fig: FigureKind) -> (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
     #[rustfmt::skip]
     let t = match fig {
-      FigureKind::Bar => [
-        (
-          Rotation::None,
-          [[0, 1, 0, 0],
-           [0, 1, 0, 0],
-           [0, 1, 0, 0],
-           [0, 1, 0, 0]],
-        ),
-        (
-          Rotation::Left,
-          [[0, 0, 0, 0],
-           [0, 0, 0, 0],
-           [1, 1, 1, 1],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Right,
-          [[0, 0, 0, 0],
-           [1, 1, 1, 1],
-           [0, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Upside,
-          [[0, 0, 1, 0],
-           [0, 0, 1, 0],
-           [0, 0, 1, 0],
-           [0, 0, 1, 0]],
-        ),
-      ],
-      FigureKind::PZ => [
-        (
-          Rotation::None,
-          [[1, 1, 0, 0],
-           [0, 1, 1, 0],
-           [0, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Left,
-          [[0, 1, 0, 0],
-           [1, 1, 0, 0],
-           [1, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Right,
-          [[0, 0, 1, 0],
-           [0, 1, 1, 0],
-           [0, 1, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Upside,
-          [[0, 0, 0, 0],
-           [1, 1, 0, 0],
-           [0, 1, 1, 0],
-           [0, 0, 0, 0]],
-        ),
-      ],
-      FigureKind::NZ => [
-        (
-          Rotation::None,
-          [[0, 1, 1, 0],
-           [1, 1, 0, 0],
-           [0, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Left,
-          [[1, 0, 0, 0],
-           [1, 1, 0, 0],
-           [0, 1, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Right,
-          [[0, 1, 0, 0],
-           [0, 1, 1, 0],
-           [0, 0, 1, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Upside,
-          [[0, 0, 0, 0],
-           [0, 1, 1, 0],
-           [1, 1, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-      ],
-      FigureKind::PL => [
-        (
-          Rotation::None,
-          [[0, 1, 0, 0],
-           [0, 1, 0, 0],
-           [0, 1, 1, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Left,
-          [[0, 0, 1, 0],
-           [1, 1, 1, 0],
-           [0, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Right,
-          [[0, 0, 0, 0],
-           [1, 1, 1, 0],
-           [1, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Upside,
-          [[1, 1, 0, 0],
-           [0, 1, 0, 0],
-           [0, 1, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-      ],
-      FigureKind::NL => [
-        (
-          Rotation::None,
-          [[0, 1, 0, 0],
-           [0, 1, 0, 0],
-           [1, 1, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Left,
-          [[0, 0, 0, 0],
-           [1, 1, 1, 0],
-           [0, 0, 1, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Right,
-          [[1, 0, 0, 0],
-           [1, 1, 1, 0],
-           [0, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Upside,
-          [[0, 1, 1, 0],
-           [0, 1, 0, 0],
-           [0, 1, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-      ],
-      FigureKind::Square => [
-        (
-          Rotation::None,
-          [[1, 1, 0, 0],
-           [1, 1, 0, 0],
-           [0, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Left,
-          [[1, 1, 0, 0],
-           [1, 1, 0, 0],
-           [0, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Right,
-          [[1, 1, 0, 0],
-           [1, 1, 0, 0],
-           [0, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Upside,
-          [[1, 1, 0, 0],
-           [1, 1, 0, 0],
-           [0, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-      ],
-      FigureKind::T => [
-        (
-          Rotation::None,
-          [[0, 0, 0, 0],
-           [1, 1, 1, 0],
-           [0, 1, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Left,
-          [[0, 1, 0, 0],
-           [0, 1, 1, 0],
-           [0, 1, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Right,
-          [[0, 1, 0, 0],
-           [1, 1, 0, 0],
-           [0, 1, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-        (
-          Rotation::Upside,
-          [[0, 1, 0, 0],
-           [1, 1, 1, 0],
-           [0, 0, 0, 0],
-           [0, 0, 0, 0]],
-        ),
-      ],
+      FigureKind::Bar => (
+        Pos { x: 4, y: -2 },
+        [
+          (
+            Rotation::None,
+            [[0, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 1, 0, 0]],
+          ),
+          (
+            Rotation::Left,
+            [[0, 0, 0, 0],
+             [0, 0, 0, 0],
+             [1, 1, 1, 1],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Right,
+            [[0, 0, 0, 0],
+             [1, 1, 1, 1],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Upside,
+            [[0, 0, 1, 0],
+             [0, 0, 1, 0],
+             [0, 0, 1, 0],
+             [0, 0, 1, 0]],
+          ),
+        ],
+      ),
+      FigureKind::PZ => (
+        Pos { x: 4, y: 0 },
+        [
+          (
+            Rotation::None,
+            [[1, 1, 0, 0],
+             [0, 1, 1, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Left,
+            [[0, 1, 0, 0],
+             [1, 1, 0, 0],
+             [1, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Right,
+            [[0, 0, 1, 0],
+             [0, 1, 1, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Upside,
+            [[0, 0, 0, 0],
+             [1, 1, 0, 0],
+             [0, 1, 1, 0],
+             [0, 0, 0, 0]],
+          ),
+        ],
+      ),
+      FigureKind::NZ => (
+        Pos { x: 4, y: 0 },
+        [
+          (
+            Rotation::None,
+            [[0, 1, 1, 0],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Left,
+            [[1, 0, 0, 0],
+             [1, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Right,
+            [[0, 1, 0, 0],
+             [0, 1, 1, 0],
+             [0, 0, 1, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Upside,
+            [[0, 0, 0, 0],
+             [0, 1, 1, 0],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+        ],
+      ),
+      FigureKind::PL => (
+        Pos { x: 4, y: -1 },
+        [
+          (
+            Rotation::None,
+            [[0, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 1, 1, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Left,
+            [[0, 0, 1, 0],
+             [1, 1, 1, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Right,
+            [[0, 0, 0, 0],
+             [1, 1, 1, 0],
+             [1, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Upside,
+            [[1, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+        ],
+      ),
+      FigureKind::NL => (
+        Pos { x: 4, y: -1 },
+        [
+          (
+            Rotation::None,
+            [[0, 1, 0, 0],
+             [0, 1, 0, 0],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Left,
+            [[0, 0, 0, 0],
+             [1, 1, 1, 0],
+             [0, 0, 1, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Right,
+            [[1, 0, 0, 0],
+             [1, 1, 1, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Upside,
+            [[0, 1, 1, 0],
+             [0, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+        ],
+      ),
+      FigureKind::Square => (
+        Pos { x: 4, y: 0 },
+        [
+          (
+            Rotation::None,
+            [[1, 1, 0, 0],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Left,
+            [[1, 1, 0, 0],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Right,
+            [[1, 1, 0, 0],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Upside,
+            [[1, 1, 0, 0],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+        ],
+      ),
+      FigureKind::T => (
+        Pos { x: 4, y: -1 },
+        [
+          (
+            Rotation::None,
+            [[0, 0, 0, 0],
+             [1, 1, 1, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Left,
+            [[0, 1, 0, 0],
+             [0, 1, 1, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Right,
+            [[0, 1, 0, 0],
+             [1, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+          (
+            Rotation::Upside,
+            [[0, 1, 0, 0],
+             [1, 1, 1, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
+          ),
+        ],
+      ),
     };
-    HashMap::<_, _>::from_iter(t)
+    (t.0, HashMap::<_, _>::from_iter(t.1))
   }
 }
 impl FigureKind {
   fn get_rect(self, rotation: Rotation) -> [[u8; 4]; 4] {
-    let t: HashMap<_, _> = self.into();
+    let (_, t) = self.into();
     t.get(&rotation).unwrap().clone()
+  }
+  fn get_pos(self) -> Pos {
+    let (t, _) = self.into();
+    t
   }
 }
 struct Figure {
@@ -353,21 +379,22 @@ impl Field {
     let width = 10;
     let height = 20;
     let v = vec![vec![Color::Transparent; width]; height];
+    let kind: FigureKind = rand::thread_rng().gen();
     Field {
       width,
       height,
       pieces: v,
       current_figure: Figure {
-        kind: rand::thread_rng().gen(),
+        kind,
         color: rand::thread_rng().gen(),
       },
-      current_figure_pos: Pos { x: 4, y: 0 },
+      current_figure_pos: kind.get_pos(),
       current_figure_rotation: Rotation::None,
       state: FieldState::Playing,
       score: 0,
     }
   }
-  fn put_rect_at(&mut self) {
+  fn place_current_figure(&mut self) {
     for (y, line) in self
       .current_figure
       .kind
@@ -381,7 +408,11 @@ impl Field {
             (x as isize + self.current_figure_pos.x) as usize,
             (y as isize + self.current_figure_pos.y) as usize,
           );
-          self.pieces[fy][fx] = self.current_figure.color;
+          if (0..self.width).contains(&fx)
+            && (0..self.height).contains(&fy)
+          {
+            self.pieces[fy][fx] = self.current_figure.color;
+          }
         }
       }
     }
@@ -493,17 +524,17 @@ impl Field {
     CollideVariant::None
   }
   fn next_figure(&mut self) {
-    self.put_rect_at();
+    self.place_current_figure();
     self.check_lines();
-    self.current_figure_pos = Pos { x: 4, y: 0 };
     self.current_figure_rotation = Rotation::None;
     self.current_figure = Figure {
       kind: rand::thread_rng().gen(),
       color: rand::thread_rng().gen(),
-    }
+    };
+    self.current_figure_pos = self.current_figure.kind.get_pos();
   }
   fn check_lines(&mut self) {
-    if let Some((y, line)) = self
+    if let Some((y, _)) = self
       .pieces
       .iter()
       .enumerate()
@@ -598,62 +629,46 @@ fn main() {
     Pixels::new(window_size.width, window_size.height, surface_texture)
       .unwrap();
 
-  let period = Duration::new(0, 1000_000_000 / 4);
+  let period = Duration::new(1, 0) / 1000 * PERIOD_MS;
 
   let mut field = Field::new();
 
   event_loop.run(move |event, _, control_flow| match event {
-    Event::WindowEvent { event, .. } => match event {
-      WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-      WindowEvent::KeyboardInput {
-        input:
-          KeyboardInput {
-            state: ElementState::Pressed,
-            virtual_keycode: Some(VirtualKeyCode::Left),
-            ..
-          },
-        ..
-      } => {
-        field.process_input(InputField::Left);
-        window.request_redraw();
-      }
-      WindowEvent::KeyboardInput {
-        input:
-          KeyboardInput {
-            state: ElementState::Pressed,
-            virtual_keycode: Some(VirtualKeyCode::Right),
-            ..
-          },
-        ..
-      } => {
-        field.process_input(InputField::Right);
-        window.request_redraw();
-      }
+    Event::WindowEvent { event, window_id }
+      if window_id == window.id() =>
+    {
+      match event {
+        WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+        WindowEvent::KeyboardInput {
+          input:
+            KeyboardInput {
+              state: ElementState::Pressed,
+              virtual_keycode: Some(keycode),
+              ..
+            },
+          ..
+        } => match keycode {
+          VirtualKeyCode::Left => {
+            field.process_input(InputField::Left);
+            window.request_redraw();
+          }
+          VirtualKeyCode::Right => {
+            field.process_input(InputField::Right);
+            window.request_redraw();
+          }
 
-      WindowEvent::KeyboardInput {
-        input:
-          KeyboardInput {
-            state: ElementState::Pressed,
-            virtual_keycode: Some(VirtualKeyCode::Up),
-            ..
-          },
-        ..
-      } => {
-        field.process_input(InputField::Rotate);
-        window.request_redraw();
+          VirtualKeyCode::Up => {
+            field.process_input(InputField::Rotate);
+            window.request_redraw();
+          }
+          VirtualKeyCode::Escape => {
+            *control_flow = ControlFlow::Exit;
+          }
+          _ => {}
+        },
+        _ => {}
       }
-
-      WindowEvent::KeyboardInput {
-        input:
-          KeyboardInput {
-            state: ElementState::Pressed,
-            virtual_keycode: Some(VirtualKeyCode::Space),
-            ..
-          },
-        ..
-      } => {}
-      _ => {}
-    },
+    }
     Event::NewEvents(StartCause::Init) => {
       *control_flow = ControlFlow::WaitUntil(Instant::now() + period)
     }
@@ -664,12 +679,10 @@ fn main() {
     }
     Event::RedrawRequested(_) => {
       field.draw(pixels.get_frame());
-      println!("draw");
       if pixels.render().is_err() {
         *control_flow = ControlFlow::Exit;
       }
     }
-
-    _ => (),
+    _ => {}
   });
 }
