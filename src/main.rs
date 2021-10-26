@@ -13,8 +13,7 @@ use winit::{
 mod glyphs;
 use glyphs::glyph_x2;
 mod tetris;
-use crate::tetris::Glyph;
-use tetris::{Field, InputField, FIELD_HEIGHT, FIELD_WIDTH};
+use tetris::{Field, Glyph, InputField, FIELD_HEIGHT, FIELD_WIDTH};
 
 const PIECE_DRAW_SIZE: usize = 16;
 const WIDTH: usize = (FIELD_WIDTH + 4 * 2) * PIECE_DRAW_SIZE;
@@ -106,9 +105,12 @@ fn main() {
             field.process_input(InputField::Right);
             window.request_redraw();
           }
-
           VirtualKeyCode::Up => {
             field.process_input(InputField::Rotate);
+            window.request_redraw();
+          }
+          VirtualKeyCode::Down => {
+            field.drop_figure();
             window.request_redraw();
           }
           VirtualKeyCode::Escape => {

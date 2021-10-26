@@ -7,10 +7,18 @@ use std::collections::{HashMap, VecDeque};
 pub const FIELD_WIDTH: usize = 10;
 pub const FIELD_HEIGHT: usize = 20;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 struct Pos {
   x: isize,
   y: isize,
+}
+impl Pos {
+  fn advance(&self) -> Self {
+    Pos {
+      x: self.x,
+      y: self.y + 1,
+    }
+  }
 }
 #[derive(Eq, PartialEq, Hash, Copy, Clone)]
 enum Rotation {
@@ -450,10 +458,7 @@ impl Field {
     }
   }
   pub fn make_step(&mut self) {
-    let new_pos = Pos {
-      x: self.current_figure_pos.x,
-      y: self.current_figure_pos.y + 1,
-    };
+    let new_pos = self.current_figure_pos.advance();
     if self.does_collide(self.current_figure_rotation, new_pos)
       != CollideVariant::None
     {
@@ -461,6 +466,23 @@ impl Field {
     } else {
       self.current_figure_pos = new_pos
     }
+  }
+  fn get_current_figure_shadow(&self) -> Pos {
+    let mut new_pos = self.current_figure_pos;
+    loop {
+      let new_pos_ = new_pos.advance();
+      if self.does_collide(self.current_figure_rotation, new_pos_)
+        == CollideVariant::BottomOrPieces
+      {
+        break;
+      }
+      new_pos = new_pos_;
+    }
+    new_pos
+  }
+  pub fn drop_figure(&mut self) {
+    self.current_figure_pos = self.get_current_figure_shadow();
+    self.next_figure();
   }
   fn try_rotation_replace(&self, rot: Rotation, pos: Pos) -> Option<Pos> {
     let pos = pos;
@@ -637,23 +659,31 @@ impl Field {
         let id_x = x - 4;
         let id_y = y;
         let mut color = self.pieces[id_y][id_x];
+        let shadow_pos = self.get_current_figure_shadow();
 
-        if (self.current_figure_pos.x..self.current_figure_pos.x + 4)
-          .contains(&(id_x as isize))
-          && (self.current_figure_pos.y..self.current_figure_pos.y + 4)
-            .contains(&(id_y as isize))
-        {
-          let id_x = (id_x as isize - self.current_figure_pos.x) as usize;
-          let id_y = (id_y as isize - self.current_figure_pos.y) as usize;
+        for p in [shadow_pos, self.current_figure_pos] {
+          if (p.x..p.x + 4).contains(&(id_x as isize))
+            && (p.y..p.y + 4).contains(&(id_y as isize))
+          {
+            let id_x = (id_x as isize - p.x) as usize;
+            let id_y = (id_y as isize - p.y) as usize;
 
-          if {
-            self.current_figure.get_rect(self.current_figure_rotation)
-              [id_y][id_x]
-              == 1
-          } {
-            color = self.current_figure.color.into();
+            if {
+              self.current_figure.get_rect(self.current_figure_rotation)
+                [id_y][id_x]
+                == 1
+            } {
+              color = if shadow_pos != self.current_figure_pos
+                && p == shadow_pos
+              {
+                Color::Gray.into()
+              } else {
+                self.current_figure.color.into()
+              };
+            }
           }
         }
+
         *pixel = Glyph::Color(color);
       } else {
         let id_x = x - 4 - FIELD_WIDTH;
