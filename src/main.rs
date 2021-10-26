@@ -1,6 +1,5 @@
 use pixels::{Pixels, SurfaceTexture};
 use std::time::{Duration, Instant};
-use tetris::{Field, InputField, FIELD_HEIGHT, FIELD_WIDTH};
 use winit::{
   dpi::{PhysicalSize, Size},
   event::{
@@ -11,7 +10,11 @@ use winit::{
   window::WindowBuilder,
 };
 
+mod glyphs;
+use glyphs::glyph_x2;
 mod tetris;
+use crate::tetris::Glyph;
+use tetris::{Field, InputField, FIELD_HEIGHT, FIELD_WIDTH};
 
 const PIECE_DRAW_SIZE: usize = 16;
 const WIDTH: usize = (FIELD_WIDTH + 4 * 2) * PIECE_DRAW_SIZE;
@@ -29,12 +32,25 @@ impl Field {
       let id_x = x / (WIDTH / (FIELD_WIDTH + 4 * 2));
       let id_y = y / (HEIGHT / FIELD_HEIGHT);
 
-      let color: [u8; 4];
       if id_y * (FIELD_WIDTH + 4 * 2) + id_x
         < (FIELD_WIDTH + 4 * 2) * FIELD_HEIGHT
       {
-        color = array[id_y * (FIELD_WIDTH + 4 * 2) + id_x].into();
-        pixel.copy_from_slice(&color);
+        let glyph = &array[id_y * (FIELD_WIDTH + 4 * 2) + id_x];
+        match glyph {
+          Glyph::Color(c) => {
+            let c: [u8; 4] = (*c).into();
+            pixel.copy_from_slice(&c);
+          }
+          Glyph::Number(n) => {
+            let loc_x = x - id_x * PIECE_DRAW_SIZE;
+            let loc_y = y - id_y * PIECE_DRAW_SIZE;
+            if glyph_x2(*n as u32)[loc_y][loc_x] {
+              pixel.copy_from_slice(&[!0, !0, !0, !0]);
+            } else {
+              pixel.copy_from_slice(&[0, 0, 0, !0]);
+            }
+          }
+        }
       }
       if x == 4 * PIECE_DRAW_SIZE
         || x == (4 + FIELD_WIDTH) * PIECE_DRAW_SIZE - 1

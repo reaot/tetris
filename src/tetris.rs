@@ -39,6 +39,7 @@ pub enum Color {
   Cyan,
   Magenta,
   Yellow,
+  Gray,
 }
 impl From<Color> for [u8; 4] {
   fn from(color: Color) -> [u8; 4] {
@@ -50,6 +51,7 @@ impl From<Color> for [u8; 4] {
       Color::Cyan => [0, !0, !0, !0],
       Color::Magenta => [!0, 0, !0, !0],
       Color::Yellow => [!0, !0, 0, !0],
+      Color::Gray => [!0 / 3, !0 / 3, !0 / 3, !0],
     }
   }
 }
@@ -63,6 +65,7 @@ impl Distribution<Color> for Standard {
       4 => Color::Cyan,
       5 => Color::Magenta,
       6 => Color::Yellow,
+      // gray
       _ => panic!(),
     }
   }
@@ -517,7 +520,10 @@ impl Field {
   }
   fn next_figure(&mut self) {
     self.place_current_figure();
-    self.check_lines();
+    let (n, min_row) = self.check_lines();
+    if n > 0 {
+      self.score += n * 2_u32.pow((FIELD_HEIGHT - min_row - 1) as u32);
+    }
     self.current_figure_rotation = Rotation::None;
     self.current_figure = self.next_figure;
     self.current_figure_pos = self.current_figure.kind.get_pos();
@@ -526,17 +532,25 @@ impl Field {
       color: rand::thread_rng().gen(),
     };
   }
-  fn check_lines(&mut self) {
-    if let Some((y, _)) = self
-      .pieces
-      .iter()
-      .enumerate()
-      .find(|(_, line)| line.iter().all(|x| x != &Color::Transparent))
-    {
-      self.pieces.remove(y);
-      self.pieces.insert(0, vec![Color::Transparent; self.width]);
-      self.check_lines()
+  fn check_lines(&mut self) -> (u32, usize) {
+    let mut count = 0;
+    let mut min_row: usize = FIELD_HEIGHT;
+    loop {
+      if let Some((y, _)) = self
+        .pieces
+        .iter()
+        .enumerate()
+        .find(|(_, line)| line.iter().all(|x| x != &Color::Transparent))
+      {
+        count += 1;
+        min_row = min_row.min(y);
+        self.pieces.remove(y);
+        self.pieces.insert(0, vec![Color::Transparent; self.width]);
+      } else {
+        break;
+      }
     }
+    (count, min_row)
   }
 }
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -567,19 +581,58 @@ enum Input {
 struct InputQueue {
   queue: VecDeque<InputField>,
 }
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+pub enum Glyph {
+  Color(Color),
+  Number(u8),
+}
 
 impl Field {
   pub fn draw_array(
     &self,
-  ) -> [Color; FIELD_HEIGHT * (FIELD_WIDTH + 4 * 2)] {
-    let mut result =
-      [Color::Transparent; FIELD_HEIGHT * (FIELD_WIDTH + 4 * 2)];
+  ) -> [Glyph; FIELD_HEIGHT * (FIELD_WIDTH + 4 * 2)] {
+    let mut result = [Glyph::Color(Color::Transparent);
+      FIELD_HEIGHT * (FIELD_WIDTH + 4 * 2)];
 
     for (i, pixel) in result.iter_mut().enumerate() {
       let x = i % (FIELD_WIDTH + 4 * 2);
       let y = i / (FIELD_WIDTH + 4 * 2);
 
       if x < 4 {
+        let id_x = x;
+        let id_y = y;
+
+        let rect = self.next_figure.get_rect(Rotation::None);
+
+        let dy = rect
+          .iter()
+          .enumerate()
+          .find(|(_, x)| x.iter().any(|x| x != &0))
+          .map_or(0, |x| x.0);
+
+        let dx = transpose(&rect)
+          .iter()
+          .enumerate()
+          .find(|(_, x)| x.iter().any(|x| x != &0))
+          .map_or(0, |x| x.0);
+
+        let id_x = id_x + dx;
+        let id_y = id_y + dy;
+        if id_x < 4 && id_y < 4 && rect[id_y][id_x] == 1 {
+          *pixel = Glyph::Color(self.next_figure.color);
+        }
+
+        fn transpose<T: Default + Copy, const N: usize, const M: usize>(
+          r: &[[T; N]; M],
+        ) -> [[T; M]; N] {
+          let mut res = [[Default::default(); M]; N];
+          for i in 0..N {
+            for j in 0..M {
+              res[i][j] = r[j][i];
+            }
+          }
+          res
+        }
       } else if x < FIELD_WIDTH + 4 {
         let id_x = x - 4;
         let id_y = y;
@@ -601,41 +654,13 @@ impl Field {
             color = self.current_figure.color.into();
           }
         }
-        *pixel = color;
+        *pixel = Glyph::Color(color);
       } else {
         let id_x = x - 4 - FIELD_WIDTH;
         let id_y = y;
-
-        let rect = self.next_figure.get_rect(Rotation::None);
-
-        let dy = rect
-          .iter()
-          .enumerate()
-          .find(|(_, x)| x.iter().any(|x| x != &0))
-          .map_or(0, |x| x.0);
-
-        let dx = transpose(&rect)
-          .iter()
-          .enumerate()
-          .find(|(_, x)| x.iter().any(|x| x != &0))
-          .map_or(0, |x| x.0);
-
-        let id_x = id_x + dx;
-        let id_y = id_y + dy;
-        if id_x < 4 && id_y < 4 && rect[id_y][id_x] == 1 {
-          *pixel = self.next_figure.color;
-        }
-
-        fn transpose<T: Default + Copy, const N: usize, const M: usize>(
-          r: &[[T; N]; M],
-        ) -> [[T; M]; N] {
-          let mut res = [[Default::default(); M]; N];
-          for i in 0..N {
-            for j in 0..M {
-              res[i][j] = r[j][i];
-            }
-          }
-          res
+        if id_x < 4 && id_y < 1 {
+          let i = (3 - id_x) as u32;
+          *pixel = Glyph::Number((self.score / 100_u32.pow(i) % 100) as u8)
         }
       }
     }
