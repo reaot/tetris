@@ -7,7 +7,7 @@ use std::collections::{HashMap, VecDeque};
 pub const FIELD_WIDTH: usize = 10;
 pub const FIELD_HEIGHT: usize = 20;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct Pos {
   x: isize,
   y: isize,
@@ -341,6 +341,7 @@ impl FigureKind {
     t
   }
 }
+#[derive(Copy, Clone)]
 struct Figure {
   kind: FigureKind,
   color: Color,
@@ -357,6 +358,7 @@ pub struct Field {
   current_figure: Figure,
   current_figure_pos: Pos,
   current_figure_rotation: Rotation,
+  next_figure: Figure,
   state: FieldState,
   score: u32,
 }
@@ -376,6 +378,10 @@ impl Field {
       },
       current_figure_pos: kind.get_pos(),
       current_figure_rotation: Rotation::None,
+      next_figure: Figure {
+        kind: rand::thread_rng().gen(),
+        color: rand::thread_rng().gen(),
+      },
       state: FieldState::Playing,
       score: 0,
     }
@@ -513,11 +519,12 @@ impl Field {
     self.place_current_figure();
     self.check_lines();
     self.current_figure_rotation = Rotation::None;
-    self.current_figure = Figure {
+    self.current_figure = self.next_figure;
+    self.current_figure_pos = self.current_figure.kind.get_pos();
+    self.next_figure = Figure {
       kind: rand::thread_rng().gen(),
       color: rand::thread_rng().gen(),
     };
-    self.current_figure_pos = self.current_figure.kind.get_pos();
   }
   fn check_lines(&mut self) {
     if let Some((y, _)) = self
@@ -596,6 +603,40 @@ impl Field {
         }
         *pixel = color;
       } else {
+        let id_x = x - 4 - FIELD_WIDTH;
+        let id_y = y;
+
+        let rect = self.next_figure.get_rect(Rotation::None);
+
+        let dy = rect
+          .iter()
+          .enumerate()
+          .find(|(_, x)| x.iter().any(|x| x != &0))
+          .map_or(0, |x| x.0);
+
+        let dx = transpose(&rect)
+          .iter()
+          .enumerate()
+          .find(|(_, x)| x.iter().any(|x| x != &0))
+          .map_or(0, |x| x.0);
+
+        let id_x = id_x + dx;
+        let id_y = id_y + dy;
+        if id_x < 4 && id_y < 4 && rect[id_y][id_x] == 1 {
+          *pixel = self.next_figure.color;
+        }
+
+        fn transpose<T: Default + Copy, const N: usize, const M: usize>(
+          r: &[[T; N]; M],
+        ) -> [[T; M]; N] {
+          let mut res = [[Default::default(); M]; N];
+          for i in 0..N {
+            for j in 0..M {
+              res[i][j] = r[j][i];
+            }
+          }
+          res
+        }
       }
     }
     result
