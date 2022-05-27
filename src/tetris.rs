@@ -382,7 +382,7 @@ pub struct Field {
   current_figure_pos: Pos,
   current_figure_rotation: Rotation,
   next_figure: Figure,
-  state: FieldState,
+  _state: FieldState,
   score: u32,
 }
 
@@ -406,7 +406,7 @@ impl Field {
         kind: rand::thread_rng().gen(),
         color: rand::thread_rng().gen(),
       },
-      state: FieldState::Playing,
+      _state: FieldState::Playing,
       score: 0,
     }
   }
@@ -608,8 +608,8 @@ enum CollideVariant {
 
 enum FieldState {
   Playing,
-  Paused,
-  GameOver,
+  _Paused,
+  _GameOver,
 }
 
 #[derive(Copy, Clone)]
@@ -619,15 +619,14 @@ pub enum InputField {
   Rotate,
 }
 
-#[derive(Copy, Clone)]
-enum Input {
+enum _Input {
   InputField(InputField),
   Down,
   Pause,
   Quit,
 }
 
-struct InputQueue {
+struct _InputQueue {
   queue: VecDeque<InputField>,
 }
 
