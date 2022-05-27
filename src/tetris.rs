@@ -12,6 +12,7 @@ struct Pos {
   x: isize,
   y: isize,
 }
+
 impl Pos {
   fn advance(&self) -> Self {
     Pos {
@@ -20,6 +21,7 @@ impl Pos {
     }
   }
 }
+
 #[derive(Eq, PartialEq, Hash, Copy, Clone)]
 enum Rotation {
   None,
@@ -27,6 +29,7 @@ enum Rotation {
   Right,
   Upside,
 }
+
 impl Rotation {
   fn rotate(&self) -> Self {
     match self {
@@ -49,6 +52,7 @@ pub enum Color {
   Yellow,
   Gray,
 }
+
 impl From<Color> for [u8; 4] {
   fn from(color: Color) -> [u8; 4] {
     match color {
@@ -63,6 +67,7 @@ impl From<Color> for [u8; 4] {
     }
   }
 }
+
 impl Distribution<Color> for Standard {
   fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Color {
     match rng.gen_range(1..7) {
@@ -78,6 +83,7 @@ impl Distribution<Color> for Standard {
     }
   }
 }
+
 #[derive(Copy, Clone)]
 enum FigureKind {
   Bar,
@@ -88,6 +94,7 @@ enum FigureKind {
   Square,
   T,
 }
+
 impl Distribution<FigureKind> for Standard {
   fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> FigureKind {
     match rng.gen_range(0..7) {
@@ -106,37 +113,37 @@ impl Distribution<FigureKind> for Standard {
 impl From<FigureKind> for (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
   fn from(fig: FigureKind) -> (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
     #[rustfmt::skip]
-        let t = match fig {
+    let t = match fig {
       FigureKind::Bar => (
         Pos { x: 4, y: -2 },
         [
           (
             Rotation::None,
             [[0, 1, 0, 0],
-              [0, 1, 0, 0],
-              [0, 1, 0, 0],
-              [0, 1, 0, 0]],
+             [0, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 1, 0, 0]],
           ),
           (
             Rotation::Left,
             [[0, 0, 0, 0],
-              [0, 0, 0, 0],
-              [1, 1, 1, 1],
-              [0, 0, 0, 0]],
+             [0, 0, 0, 0],
+             [1, 1, 1, 1],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Right,
             [[0, 0, 0, 0],
-              [1, 1, 1, 1],
-              [0, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 1, 1],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Upside,
             [[0, 0, 1, 0],
-              [0, 0, 1, 0],
-              [0, 0, 1, 0],
-              [0, 0, 1, 0]],
+             [0, 0, 1, 0],
+             [0, 0, 1, 0],
+             [0, 0, 1, 0]],
           ),
         ],
       ),
@@ -146,30 +153,30 @@ impl From<FigureKind> for (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
           (
             Rotation::None,
             [[1, 1, 0, 0],
-              [0, 1, 1, 0],
-              [0, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [0, 1, 1, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Left,
             [[0, 1, 0, 0],
-              [1, 1, 0, 0],
-              [1, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 0, 0],
+             [1, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Right,
             [[0, 0, 1, 0],
-              [0, 1, 1, 0],
-              [0, 1, 0, 0],
-              [0, 0, 0, 0]],
+             [0, 1, 1, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Upside,
             [[0, 0, 0, 0],
-              [1, 1, 0, 0],
-              [0, 1, 1, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 0, 0],
+             [0, 1, 1, 0],
+             [0, 0, 0, 0]],
           ),
         ],
       ),
@@ -179,30 +186,30 @@ impl From<FigureKind> for (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
           (
             Rotation::None,
             [[0, 1, 1, 0],
-              [1, 1, 0, 0],
-              [0, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Left,
             [[1, 0, 0, 0],
-              [1, 1, 0, 0],
-              [0, 1, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Right,
             [[0, 1, 0, 0],
-              [0, 1, 1, 0],
-              [0, 0, 1, 0],
-              [0, 0, 0, 0]],
+             [0, 1, 1, 0],
+             [0, 0, 1, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Upside,
             [[0, 0, 0, 0],
-              [0, 1, 1, 0],
-              [1, 1, 0, 0],
-              [0, 0, 0, 0]],
+             [0, 1, 1, 0],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0]],
           ),
         ],
       ),
@@ -212,30 +219,30 @@ impl From<FigureKind> for (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
           (
             Rotation::None,
             [[0, 1, 0, 0],
-              [0, 1, 0, 0],
-              [0, 1, 1, 0],
-              [0, 0, 0, 0]],
+             [0, 1, 0, 0],
+             [0, 1, 1, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Left,
             [[0, 0, 1, 0],
-              [1, 1, 1, 0],
-              [0, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 1, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Right,
             [[0, 0, 0, 0],
-              [1, 1, 1, 0],
-              [1, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 1, 0],
+             [1, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Upside,
             [[1, 1, 0, 0],
-              [0, 1, 0, 0],
-              [0, 1, 0, 0],
-              [0, 0, 0, 0]],
+             [0, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
           ),
         ],
       ),
@@ -245,30 +252,30 @@ impl From<FigureKind> for (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
           (
             Rotation::None,
             [[0, 1, 0, 0],
-              [0, 1, 0, 0],
-              [1, 1, 0, 0],
-              [0, 0, 0, 0]],
+             [0, 1, 0, 0],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Left,
             [[0, 0, 0, 0],
-              [1, 1, 1, 0],
-              [0, 0, 1, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 1, 0],
+             [0, 0, 1, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Right,
             [[1, 0, 0, 0],
-              [1, 1, 1, 0],
-              [0, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 1, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Upside,
             [[0, 1, 1, 0],
-              [0, 1, 0, 0],
-              [0, 1, 0, 0],
-              [0, 0, 0, 0]],
+             [0, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
           ),
         ],
       ),
@@ -278,30 +285,30 @@ impl From<FigureKind> for (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
           (
             Rotation::None,
             [[1, 1, 0, 0],
-              [1, 1, 0, 0],
-              [0, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Left,
             [[1, 1, 0, 0],
-              [1, 1, 0, 0],
-              [0, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Right,
             [[1, 1, 0, 0],
-              [1, 1, 0, 0],
-              [0, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Upside,
             [[1, 1, 0, 0],
-              [1, 1, 0, 0],
-              [0, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 0, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
         ],
       ),
@@ -311,30 +318,30 @@ impl From<FigureKind> for (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
           (
             Rotation::None,
             [[0, 0, 0, 0],
-              [1, 1, 1, 0],
-              [0, 1, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 1, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Left,
             [[0, 1, 0, 0],
-              [0, 1, 1, 0],
-              [0, 1, 0, 0],
-              [0, 0, 0, 0]],
+             [0, 1, 1, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Right,
             [[0, 1, 0, 0],
-              [1, 1, 0, 0],
-              [0, 1, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 0, 0],
+             [0, 1, 0, 0],
+             [0, 0, 0, 0]],
           ),
           (
             Rotation::Upside,
             [[0, 1, 0, 0],
-              [1, 1, 1, 0],
-              [0, 0, 0, 0],
-              [0, 0, 0, 0]],
+             [1, 1, 1, 0],
+             [0, 0, 0, 0],
+             [0, 0, 0, 0]],
           ),
         ],
       ),
@@ -342,26 +349,31 @@ impl From<FigureKind> for (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
     (t.0, HashMap::<_, _>::from_iter(t.1))
   }
 }
+
 impl FigureKind {
   fn get_rect(self, rotation: Rotation) -> [[u8; 4]; 4] {
     let (_, t) = self.into();
     t.get(&rotation).unwrap().clone()
   }
+
   fn get_pos(self) -> Pos {
     let (t, _) = self.into();
     t
   }
 }
+
 #[derive(Copy, Clone)]
 struct Figure {
   kind: FigureKind,
   color: Color,
 }
+
 impl Figure {
   fn get_rect(&self, rotation: Rotation) -> [[u8; 4]; 4] {
     self.kind.get_rect(rotation)
   }
 }
+
 pub struct Field {
   width: usize,
   height: usize,
@@ -373,6 +385,7 @@ pub struct Field {
   state: FieldState,
   score: u32,
 }
+
 impl Field {
   pub fn new() -> Self {
     let width = FIELD_WIDTH;
@@ -397,6 +410,7 @@ impl Field {
       score: 0,
     }
   }
+
   fn place_current_figure(&mut self) {
     for (y, line) in self
       .current_figure
@@ -420,6 +434,7 @@ impl Field {
       }
     }
   }
+
   pub fn process_input(&mut self, input: InputField) {
     match input {
       InputField::Left => {
@@ -457,6 +472,7 @@ impl Field {
       }
     }
   }
+
   pub fn make_step(&mut self) {
     let new_pos = self.current_figure_pos.advance();
     if self.does_collide(self.current_figure_rotation, new_pos)
@@ -467,6 +483,7 @@ impl Field {
       self.current_figure_pos = new_pos
     }
   }
+
   fn get_current_figure_shadow(&self) -> Pos {
     let mut new_pos = self.current_figure_pos;
     loop {
@@ -480,10 +497,12 @@ impl Field {
     }
     new_pos
   }
+
   pub fn drop_figure(&mut self) {
     self.current_figure_pos = self.get_current_figure_shadow();
     self.next_figure();
   }
+
   fn try_rotation_replace(&self, rot: Rotation, pos: Pos) -> Option<Pos> {
     let pos = pos;
     let d = self.does_collide(rot, pos);
@@ -506,6 +525,7 @@ impl Field {
       CollideVariant::BottomOrPieces => None,
     }
   }
+
   fn does_collide(&self, rot: Rotation, pos: Pos) -> CollideVariant {
     for (_, line) in self.current_figure.get_rect(rot).iter().enumerate() {
       for (x, b) in line.iter().enumerate() {
@@ -540,6 +560,7 @@ impl Field {
     }
     CollideVariant::None
   }
+
   fn next_figure(&mut self) {
     self.place_current_figure();
     let (n, min_row) = self.check_lines();
@@ -554,6 +575,7 @@ impl Field {
       color: rand::thread_rng().gen(),
     };
   }
+
   fn check_lines(&mut self) -> (u32, usize) {
     let mut count = 0;
     let mut min_row: usize = FIELD_HEIGHT;
@@ -575,6 +597,7 @@ impl Field {
     (count, min_row)
   }
 }
+
 #[derive(Copy, Clone, Eq, PartialEq)]
 enum CollideVariant {
   None,
@@ -582,17 +605,20 @@ enum CollideVariant {
   Right,
   BottomOrPieces,
 }
+
 enum FieldState {
   Playing,
   Paused,
   GameOver,
 }
+
 #[derive(Copy, Clone)]
 pub enum InputField {
   Left,
   Right,
   Rotate,
 }
+
 #[derive(Copy, Clone)]
 enum Input {
   InputField(InputField),
@@ -600,9 +626,11 @@ enum Input {
   Pause,
   Quit,
 }
+
 struct InputQueue {
   queue: VecDeque<InputField>,
 }
+
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum Glyph {
   Color(Color),
