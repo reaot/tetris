@@ -353,7 +353,7 @@ impl From<FigureKind> for (Pos, HashMap<Rotation, [[u8; 4]; 4]>) {
 impl FigureKind {
   fn get_rect(self, rotation: Rotation) -> [[u8; 4]; 4] {
     let (_, t) = self.into();
-    t.get(&rotation).unwrap().clone()
+    *t.get(&rotation).unwrap()
   }
 
   fn get_pos(self) -> Pos {
@@ -579,21 +579,18 @@ impl Field {
   fn check_lines(&mut self) -> (u32, usize) {
     let mut count = 0;
     let mut min_row: usize = FIELD_HEIGHT;
-    loop {
-      if let Some((y, _)) = self
-        .pieces
-        .iter()
-        .enumerate()
-        .find(|(_, line)| line.iter().all(|x| x != &Color::Transparent))
-      {
-        count += 1;
-        min_row = min_row.min(y);
-        self.pieces.remove(y);
-        self.pieces.insert(0, vec![Color::Transparent; self.width]);
-      } else {
-        break;
-      }
+    while let Some((y, _)) = self
+      .pieces
+      .iter()
+      .enumerate()
+      .find(|(_, line)| line.iter().all(|x| x != &Color::Transparent))
+    {
+      count += 1;
+      min_row = min_row.min(y);
+      self.pieces.remove(y);
+      self.pieces.insert(0, vec![Color::Transparent; self.width]);
     }
+
     (count, min_row)
   }
 }
@@ -695,17 +692,16 @@ impl Field {
             let id_x = (id_x as isize - p.x) as usize;
             let id_y = (id_y as isize - p.y) as usize;
 
-            if {
-              self.current_figure.get_rect(self.current_figure_rotation)
-                [id_y][id_x]
-                == 1
-            } {
+            if self.current_figure.get_rect(self.current_figure_rotation)
+              [id_y][id_x]
+              == 1
+            {
               color = if shadow_pos != self.current_figure_pos
                 && p == shadow_pos
               {
-                Color::Gray.into()
+                Color::Gray
               } else {
-                self.current_figure.color.into()
+                self.current_figure.color
               };
             }
           }
