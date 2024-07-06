@@ -183,25 +183,25 @@ const GLYPHS_NUMBERS: [[u8; 16]; 10] = [
 ];
 
 pub fn glyph_x2(i: u32) -> [[bool; 16]; 16] {
-  assert!(i < 100);
-  let left = i / 10;
-  let right = i % 10;
+    assert!(i < 100);
+    let left = i / 10;
+    let right = i % 10;
 
-  let mut result = [[false; 16]; 16];
+    let mut result = [[false; 16]; 16];
 
-  for y in 0..16 {
-    for x in 0..16 {
-      result[y][x] = if x < 8 {
-        nth_bit(GLYPHS_NUMBERS[left as usize][y], 7 - x)
-      } else {
-        nth_bit(GLYPHS_NUMBERS[right as usize][y], 7 - (x - 8))
-      }
+    for y in 0..16 {
+        for x in 0..16 {
+            result[y][x] = if x < 8 {
+                nth_bit(GLYPHS_NUMBERS[left as usize][y], 7 - x)
+            } else {
+                nth_bit(GLYPHS_NUMBERS[right as usize][y], 7 - (x - 8))
+            }
+        }
     }
-  }
 
-  fn nth_bit(s: u8, n: usize) -> bool {
-    (s >> n) % 2 == 1
-  }
+    fn nth_bit(s: u8, n: usize) -> bool {
+        (s >> n) % 2 == 1
+    }
 
-  result
+    result
 }
